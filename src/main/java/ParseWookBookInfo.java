@@ -13,17 +13,18 @@ import java.util.zip.ZipInputStream;
  * @author cznno
  * Date: 2019/3/7
  */
-public class ParseWookBookInfo {
+class ParseWookBookInfo {
 
-    public static List<Sheet> parse(ZipInputStream zis) throws XMLStreamException {
+    static List<Sheet> parse(ZipInputStream zis) throws XMLStreamException {
         List<Sheet> sheetList = new ArrayList<>();
         XMLEventReader xmlEventReader = XMLInputFactory.newInstance().createXMLEventReader(zis);
         while (xmlEventReader.hasNext()) {
             XMLEvent event = xmlEventReader.nextEvent();
             if (event.isStartElement()) {
-                if (((StartElement) event).getName().getLocalPart().equals("sheet")) {
-                    Attribute name = ((StartElement) event).getAttributeByName(new QName("name"));
-                    Attribute sheetId = ((StartElement) event).getAttributeByName(new QName("sheetId"));
+                StartElement se = event.asStartElement();
+                if (se.getName().getLocalPart().equals("sheet")) {
+                    Attribute name = se.getAttributeByName(new QName("name"));
+                    Attribute sheetId = se.getAttributeByName(new QName("sheetId"));
                     sheetList.add(new Sheet(name.getValue(), sheetId.getValue()));
                 }
             }

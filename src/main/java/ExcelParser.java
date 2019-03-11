@@ -1,4 +1,8 @@
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.XMLEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -21,16 +25,27 @@ public class ExcelParser {
     public void read(InputStream stream) throws IOException, XMLStreamException {
         byte[] buffer = new byte[1024];
         ZipInputStream zis = new ZipInputStream(stream);
-        ZipEntry zipEntry = zis.getNextEntry();
+        ZipEntry zipEntry;
 
-        while (zipEntry != null) {
+        while ((zipEntry = zis.getNextEntry()) != null) {
+            System.out.println(zipEntry.getName());
             if (zipEntry.getName().equals("xl/workbook.xml")) {
-                sheetList = ParseWookBookInfo.parse(zis);
+//                sheetList = ParseWookBookInfo.parse(zis);
             }
 
+            if (zipEntry.getName().equals("xl/worksheets/sheet1.xml")) {
+                XMLEventReader xmlEventReader = XMLInputFactory.newInstance().createXMLEventReader(zis);
+                while (xmlEventReader.hasNext()) {
+                    XMLEvent event = xmlEventReader.nextEvent();
+                    if (event.isCharacters()) {
+                        Characters se = event.asCharacters();
+//                        System.out.println(se.getData());
+                    }
+                }
+            }
 
-            zipEntry = zis.getNextEntry();
+//            zis.closeEntry();
         }
-        System.out.println();
+        zis.close();
     }
 }
