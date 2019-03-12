@@ -1,7 +1,8 @@
 import org.junit.jupiter.api.Test;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author cznno
@@ -9,9 +10,18 @@ import java.io.*;
  */
 class ExcelParserTest {
     @Test
-    void readFile() throws IOException, XMLStreamException {
+    void load() throws IOException, XMLStreamException {
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream stream = classLoader.getResourceAsStream("test-template.xlsx");
-        new ExcelParser().read(stream);
+        new ExcelParser().load(stream);
+    }
+
+    @Test
+    void readSheet() throws IOException, XMLStreamException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream stream = classLoader.getResourceAsStream("test-template.xlsx");
+        ExcelParser excelParser = new ExcelParser();
+        excelParser.load(stream);
+        excelParser.readSheet("app");
     }
 }
