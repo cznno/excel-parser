@@ -40,32 +40,6 @@ public class ExcelParser {
 
         this.sheetMap = WorkBookInfo.parseSheet(zipFile);
         this.sharedStrings = WorkBookInfo.parseSharedStrings(zipFile);
-
-      /*  if (true) return;
-
-        byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(stream);
-        ZipEntry zipEntry;
-
-        while ((zipEntry = zis.getNextEntry()) != null) {
-            System.out.println(zipEntry.getName());
-            if (zipEntry.getName().equals("xl/workbook.xml")) {
-//                sheetList = ParseWookBookInfo.parse(zis);
-            }
-
-            if (zipEntry.getName().equals("xl/worksheets/sheet1.xml")) {
-                XMLEventReader xmlEventReader = XMLInputFactory.newInstance().createXMLEventReader(zis);
-                while (xmlEventReader.hasNext()) {
-                    XMLEvent event = xmlEventReader.nextEvent();
-                    if (event.isCharacters()) {
-                        Characters se = event.asCharacters();
-//                        System.out.println(se.getData());
-                    }
-                }
-            }
-//            zis.closeEntry();
-        }
-        zis.close();*/
     }
 
     public void readSheet(String sheetName, int limit, int offset) throws IOException, XMLStreamException {
