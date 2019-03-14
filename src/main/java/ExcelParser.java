@@ -42,7 +42,7 @@ public class ExcelParser {
         this.sharedStrings = WorkBookInfo.parseSharedStrings(zipFile);
     }
 
-    public void readSheet(String sheetName, int limit, int offset) throws IOException, XMLStreamException {
+    public List<List<Cell>> readSheet(String sheetName, int limit, int offset) throws IOException, XMLStreamException {
         String sheetId = sheetMap.get(sheetName).getSheetId();
         ZipEntry entry = this.zipFile.getEntry("xl/worksheets/sheet" + sheetId + ".xml");
         XMLEventReader xmlEventReader = XMLInputFactory.newInstance()
@@ -54,21 +54,21 @@ public class ExcelParser {
 
         int count = 0;
 
-        List<List<Cell>> row = new LinkedList<>();
+        List<List<Cell>> rows = new LinkedList<>();
         List<Cell> column = new ArrayList<>();
 
         while (xmlEventReader.hasNext()) {
             XMLEvent event = xmlEventReader.nextEvent();
             if (event.isStartElement()) {
                 StartElement se = event.asStartElement();
-                if (se.getName().getLocalPart().equalsIgnoreCase("row")) {
+                if (se.getName().getLocalPart().equalsIgnoreCase("rows")) {
                     if (offset >= 0) {
                         offset--;
                         continue;
                     } else {
                         start = true;
                     }
-                    row.add(column);
+                    rows.add(column);
                     column = new LinkedList<>();
                     count++;
                 } else if (se.getName().getLocalPart().equalsIgnoreCase("v")) {
@@ -85,14 +85,13 @@ public class ExcelParser {
             }
         }
 
-        for (final List<Cell> cells : row) {
+        for (final List<Cell> cells : rows) {
             for (final Cell cell : cells) {
                 if (cell.isString())
-                    System.out.print(sharedStrings[(Integer.parseInt(cell.getValue()))] + ",");
-                else
-                    System.out.print(cell.getValue() + ",");
+                    cell.setValue(sharedStrings[(Integer.parseInt(cell.getValue()))]);
             }
-            System.out.println();
         }
+
+        return rows;
     }
 }

@@ -67,7 +67,6 @@ class WorkBookInfo {
                     i++;
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println(event.asCharacters().getData());
                 }
             }
         }
