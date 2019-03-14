@@ -1,3 +1,4 @@
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -24,6 +25,8 @@ public class ExcelParser {
 
     private Map<String, Sheet> sheetMap;
 
+    private String[] sharedStrings;
+
     private ZipFile zipFile;
 
     public ExcelParser() {
@@ -35,9 +38,8 @@ public class ExcelParser {
         Files.copy(stream, zip.toPath(), REPLACE_EXISTING);
         this.zipFile = new ZipFile(zip);
 
-
-        ZipEntry entry = this.zipFile.getEntry("xl/workbook.xml");
-        this.sheetMap = ParseWorkBookInfo.parse(this.zipFile.getInputStream(entry));
+        this.sheetMap = WorkBookInfo.parseSheet(zipFile);
+        this.sharedStrings = WorkBookInfo.parseSharedStrings(zipFile);
 
       /*  if (true) return;
 
@@ -66,37 +68,57 @@ public class ExcelParser {
         zis.close();*/
     }
 
-    public void readSheet(String sheetName) throws IOException, XMLStreamException {
-        ZipEntry entry = this.zipFile.getEntry("xl/worksheets/sheet" + sheetMap.get(sheetName).getSheetId() + ".xml");
-        XMLEventReader xmlEventReader = XMLInputFactory.newInstance().createXMLEventReader(this.zipFile.getInputStream(
-            entry));
+    public void readSheet(String sheetName, int limit, int offset) throws IOException, XMLStreamException {
+        String sheetId = sheetMap.get(sheetName).getSheetId();
+        ZipEntry entry = this.zipFile.getEntry("xl/worksheets/sheet" + sheetId + ".xml");
+        XMLEventReader xmlEventReader = XMLInputFactory.newInstance()
+                                                       .createXMLEventReader(this.zipFile.getInputStream(entry));
 
         boolean cellValueFound = false;
+        boolean cellIsString = false;
+        boolean start = false;
 
-        List<List<String>> row = new LinkedList<>();
-        List<String> column = new ArrayList<>();
+        int count = 0;
+
+        List<List<Cell>> row = new LinkedList<>();
+        List<Cell> column = new ArrayList<>();
+
         while (xmlEventReader.hasNext()) {
             XMLEvent event = xmlEventReader.nextEvent();
             if (event.isStartElement()) {
                 StartElement se = event.asStartElement();
                 if (se.getName().getLocalPart().equalsIgnoreCase("row")) {
+                    if (offset >= 0) {
+                        offset--;
+                        continue;
+                    } else {
+                        start = true;
+                    }
                     row.add(column);
                     column = new LinkedList<>();
+                    count++;
                 } else if (se.getName().getLocalPart().equalsIgnoreCase("v")) {
                     cellValueFound = true;
+                } else if (se.getName().getLocalPart().equalsIgnoreCase("c")) {
+                    cellIsString = se.getAttributeByName(new QName("t")) != null;
                 }
-//                if (se.getName().getLocalPart().equals("sheet")) {
-//                    Attribute name = se.getAttributeByName(new QName("name"));
-//                    Attribute sheetId = se.getAttributeByName(new QName("sheetId"));
-//                    sheetMap.put(name.getValue(), new Sheet(name.getValue(), sheetId.getValue()));
-//                }
-            } else if (event.isCharacters() && (cellValueFound)) {
-                column.add(event.asCharacters().getData());
+            } else if (event.isCharacters() && cellValueFound && start) {
+                column.add(new Cell(event.asCharacters().getData(), cellIsString));
+            }
+
+            if (count > limit) {
+                break;
             }
         }
 
-        for (final List<String> strings : row) {
-            System.out.println(strings);
+        for (final List<Cell> cells : row) {
+            for (final Cell cell : cells) {
+                if (cell.isString())
+                    System.out.print(sharedStrings[(Integer.parseInt(cell.getValue()))] + ",");
+                else
+                    System.out.print(cell.getValue() + ",");
+            }
+            System.out.println();
         }
     }
 }

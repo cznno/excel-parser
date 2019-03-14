@@ -22,6 +22,6 @@ class ExcelParserTest {
         InputStream stream = classLoader.getResourceAsStream("test-template.xlsx");
         ExcelParser excelParser = new ExcelParser();
         excelParser.load(stream);
-        excelParser.readSheet("app");
+        excelParser.readSheet("app", 10, 5);
     }
 }
