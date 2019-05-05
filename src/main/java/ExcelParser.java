@@ -61,7 +61,7 @@ public class ExcelParser {
             XMLEvent event = xmlEventReader.nextEvent();
             if (event.isStartElement()) {
                 StartElement se = event.asStartElement();
-                if (se.getName().getLocalPart().equalsIgnoreCase("rows")) {
+                if (se.getName().getLocalPart().equalsIgnoreCase("row")) {
                     if (offset >= 0) {
                         offset--;
                         continue;
